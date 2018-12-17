@@ -1,58 +1,93 @@
 version: "3"
 services:
-    core:
+    wifa.core:
         build: ./docker/dev/php
         image: wifa:core
-        container_name: core
+        container_name: wifa.core
         expose:
             - "9000"
         volumes:
             - ./core:/var/www
+        env_file:
+            - .env
         environment:
+            COLUMNS: "`tput cols`"
+            LINES: "`tput lines`"
             XDEBUG_CONFIG: "remote_host=172.29.175.8"
             PHP_IDE_CONFIG: "serverName=wifa.local"
         tty: true
-        hostname: core
+        depends_on:
+            - wifa.pywaves
+        hostname: wifa.core
         networks:
             - wifa_net
-    client:
+    wifa.client:
         build: ./docker/dev/node
         image: wifa:client
-        container_name: client
+        container_name: wifa.client
+        environment:
+            COLUMNS: "`tput cols`"
+            LINES: "`tput lines`"
         ports:
             - "8601:8080"
         volumes:
             - ./client:/var/www/client
         networks:
             - wifa_net
-        hostname: client
-    nginx:
+        hostname: wifa.client
+    wifa.nginx:
         build: ./docker/dev/nginx
         image: wifa:nginx
-        container_name: nginx
+        container_name: wifa.nginx
         environment:
+            COLUMNS: "`tput cols`"
+            LINES: "`tput lines`"
             CORE_HOST: api.wifa.local
             CLIENT_HOST: wifa.local
         ports:
             - "8600:80"
         depends_on:
-            - core
-            - client
+            - wifa.core
+            - wifa.client
         links:
-            - core
-            - client
+            - wifa.core
+            - wifa.client
         volumes:
             - ./core/var/log:/var/log/nginx
             - ./core/public:/var/www/core/
         networks:
             - wifa_net
-    db:
+    wifa.db:
         build: ./docker/dev/db
-        container_name: db
+        container_name: wifa.db
         image: wifa:db
         ports:
-            - "8602:27017"
-        hostname: db
+            - "8602:5432"
+        env_file:
+            - .env
+        environment:
+            COLUMNS: "`tput cols`"
+            LINES: "`tput lines`"
+            PGDATA: /pgdata
+            POSTGRES_DB: ${DATABASE_NAME}
+            POSTGRES_USER: ${DATABASE_USER}
+            POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+        hostname: wifa.db
+        networks:
+            - wifa_net
+    wifa.pywaves:
+        #TODO: add https://docs.python.org/3/library/http.server.html and rest for pywaves
+        build: ./docker/dev/pywaves
+        container_name: wifa.pywaves
+        image: wifa:pywaves
+        environment:
+            - PYTHONPATH=/var/www
+        ports:
+            - "5000:80"
+        volumes:
+            - ./pywaves:/var/www
+        tty: true
+        hostname: wifa.pywaves
         networks:
             - wifa_net
 

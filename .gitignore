@@ -19,3 +19,4 @@
 /client/*.log
 
 /docker/dev/php/composer/auth.json
+.env

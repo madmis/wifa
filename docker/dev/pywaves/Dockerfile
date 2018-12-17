@@ -1,30 +1,21 @@
-FROM nginx:1.15
+FROM python:3.7
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-RUN echo 'PS1="\[\033[36m\]\u\[\033[m\]@\[\033[95;1m\]wifa.nginx:\[\033[34m\]\w\[\033[m\]\$ "' >> ~/.bashrc
+ENV DEBIAN_FRONTEND noninteractive
+RUN TERM=xterm
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-RUN apt-get update && apt-get install -y \
-    vim \
-    wget \
-    apt-utils
+RUN echo 'PS1="\[\033[36m\]\u\[\033[m\]@\[\033[95;1m\]wifa.pywaves:\[\033[34m\]\w\[\033[m\]\$ "' >> ~/.bashrc
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-ADD core.conf /etc/nginx/conf.d/
-ADD client.conf /etc/nginx/conf.d/
-
-RUN rm /etc/nginx/conf.d/default.conf
-RUN rm /etc/nginx/nginx.conf
-COPY nginx.conf /etc/nginx/
-
-RUN mkdir -p /var/www/client
-RUN mkdir -p /var/www/core
+RUN pip install pywaves
+RUN pip install Flask
+RUN pip install flask-restful
 
 COPY ./docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
-WORKDIR /var/www/client
+WORKDIR /var/www
 
 ENTRYPOINT ["/bin/bash", "/docker-entrypoint.sh"]
-
